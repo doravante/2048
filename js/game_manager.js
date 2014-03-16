@@ -1,8 +1,11 @@
-function GameManager(size, InputManager, Actuator, ScoreManager) {
+var Grid = require('./grid.js');
+var Tile = require('./tile.js');
+
+function GameManager(size, inputManager, actuator, scoreManager) {
   this.size         = size; // Size of the grid
-  this.inputManager = new InputManager;
-  this.scoreManager = new ScoreManager;
-  this.actuator     = new Actuator;
+  this.inputManager = inputManager;
+  this.scoreManager = scoreManager;
+  this.actuator     = actuator;
 
   this.startTiles   = 2;
 
@@ -15,14 +18,13 @@ function GameManager(size, InputManager, Actuator, ScoreManager) {
 
 // Restart the game
 GameManager.prototype.restart = function () {
-  this.actuator.continue();
   this.setup();
+  this.actuator.restart();
 };
 
 // Keep playing after winning
 GameManager.prototype.keepPlaying = function () {
   this.keepPlaying = true;
-  this.actuator.continue();
 };
 
 GameManager.prototype.isGameTerminated = function () {
@@ -44,9 +46,6 @@ GameManager.prototype.setup = function () {
 
   // Add the initial tiles
   this.addStartTiles();
-
-  // Update the actuator
-  this.actuate();
 };
 
 // Set up the initial tiles to start the game with
@@ -79,7 +78,6 @@ GameManager.prototype.actuate = function () {
     bestScore:  this.scoreManager.get(),
     terminated: this.isGameTerminated()
   });
-
 };
 
 // Save all tile positions and remove merger info
@@ -107,7 +105,7 @@ GameManager.prototype.move = function (direction) {
   if (this.isGameTerminated()) return; // Don't do anything if the game's over
 
   var cell, tile;
-
+  
   var vector     = this.getVector(direction);
   var traversals = this.buildTraversals(vector);
   var moved      = false;
@@ -158,9 +156,9 @@ GameManager.prototype.move = function (direction) {
     if (!this.movesAvailable()) {
       this.over = true; // Game over!
     }
-
-    this.actuate();
   }
+  
+  this.actuate();
 };
 
 // Get the vector representing the chosen direction
@@ -243,3 +241,5 @@ GameManager.prototype.tileMatchesAvailable = function () {
 GameManager.prototype.positionsEqual = function (first, second) {
   return first.x === second.x && first.y === second.y;
 };
+
+module.exports = GameManager;

@@ -82,3 +82,20 @@ Grid.prototype.withinBounds = function (position) {
   return position.x >= 0 && position.x < this.size &&
          position.y >= 0 && position.y < this.size;
 };
+
+Grid.prototype.repr = function() {
+  var cells = [];
+
+  this.eachCell(function (x, y, tile) {
+    if (!tile) {
+      cells.push(0);
+    }
+    else {
+      cells.push(tile.value)
+    }
+  });
+
+  return cells.join('-');
+}
+
+module.exports = Grid;
