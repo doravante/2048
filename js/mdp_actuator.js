@@ -1,24 +1,23 @@
-function MDPActuator(inputManager, learner) {
+function MDPActuator(learner) {
   this.path = [];
 
-  this.inputManager = inputManager;
   this.learner = learner;
+  this.action = undefined;
+
+  this.totalGamesPlayed = 0;
 }
 
 MDPActuator.prototype.actuate = function (grid, metadata) {
   if (metadata.terminated) {
+    this.totalGamesPlayed++;
     this.updateReward(metadata.score);
     this.learner.learnBackwards(this.path);
-    return;
   }
 
-  //randomize an action
-  var action = this.learner.bestAction(grid.repr());
+  this.action = this.learner.bestAction(grid.repr());
 
   this.updateLastState(grid);
-  this.addPath(grid, action);
-
-  this.inputManager.move(action);
+  this.addPath(grid, this.action);
 };
 
 MDPActuator.prototype.updateReward = function(reward) {

@@ -1,46 +1,27 @@
-function Action(action){
-  this.action = action;
-  this.value = 0;
-  this.visits = 0;
-}
-
-Action.prototype.alpha = function (action){
-  return 1 / (1.0 + this.visits++);
-};
-
-function State(){
-  this.actions = {'0' : new Action(0), '1' : new Action(1), '2' : new Action(2), '3' : new Action(3)};
-}
-
-State.prototype.get = function(action){
-  return this.actions[action];
-}
-
-State.prototype.bestAction = function(){
-  var best = this.actions[0];
-  for (var action in this.actions) {
-    if (this.get(action).value > best.value) best = this.get(action);
-  }
-
-  return best;
-}
-
-State.prototype.visits = function(){
-  var visits = 0;
-  for (var action in this.actions) {
-    visits += this.get(action).visits;
-  }
-
-  return visits;
-}
+var _ = require("underscore");
+var brain = require('./neuralnetwork.js');
 
 function QLearner(gamma){
-    this.gamma = gamma || 0.8;
-    this.q = {};
+  this.gamma = gamma || 0.8;
+  this.q = {};
+
+  this.hiddenLayers = [20];
+
+  this.net = new brain.NeuralNetwork({hiddenLayers: this.hiddenLayers});
+  this.net.initialize(_([17, this.hiddenLayers, 1]).flatten());
 }
 
 QLearner.prototype.learnBackwards = function(steps){
   var self = this;
+
+  steps.reverse();
+  for(i=0; i<steps.length; i++) {
+    var previous = i - 1;
+    if (previous < 0) continue;
+
+    var previousReward = steps[previous].reward;
+    steps[i].reward = previousReward * this.gamma;
+  }
 
   steps.forEach(function(step){
     self.updateQ(step.state, step.action, step.reward, step.nextState); 
@@ -48,27 +29,36 @@ QLearner.prototype.learnBackwards = function(steps){
 }
 
 QLearner.prototype.updateQ = function(from, action, reward, to){
-  if(!this.q[from]) this.addState(from);
-  if(!this.q[to]) this.addState(to);
-  var alpha = this.q[from].get(action).alpha();
-  this.q[from].get(action).value = (1 - alpha)*this.q[from].get(action).value + alpha*(reward + this.gamma*this.q[to].bestAction().value);
+  var input = this.encodeInput(from, action);
+  this.net.trainPattern(input, [reward]);
 }
 
-QLearner.prototype.addState = function(state){
-  this.q[state] = new State();
+QLearner.prototype.encodeInput = function(state, action) {
+  var stateArray = _.map(state.split('-'), function(x) { return Number(x); });
+  return _([stateArray, action]).flatten()
 }
 
 QLearner.prototype.bestAction = function(state){
-  var state = this.q[state];
-  if (state && state.visits() > 5000) {
-    return state.bestAction().action;
-  } else {
+  var self = this;
+
+  var actions = _.map([0,1,2,3], function(x) { var input = self.encodeInput(state, x); return {reward: self.net.run(input), action: x}; });
+  var bestAction = _.max(actions, function(pair) { return pair.reward; });
+
+  var diffSum = 0;
+  _.each(actions, function(action) { var diff = Math.abs(action.reward - bestAction.reward); diffSum += diff; });
+
+  if (diffSum < 0.5)
     return this.randomAction();
-  }
+  else
+    return bestAction.action;
 };
 
 QLearner.prototype.randomAction = function() {
   return ~~(Math.random() * 4);
+}
+
+QLearner.prototype.toJSON = function() {
+  return this.net.toJSON();
 }
 
 module.exports = QLearner;

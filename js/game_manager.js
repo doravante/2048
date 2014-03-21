@@ -157,8 +157,6 @@ GameManager.prototype.move = function (direction) {
       this.over = true; // Game over!
     }
   }
-  
-  this.actuate();
 };
 
 // Get the vector representing the chosen direction
