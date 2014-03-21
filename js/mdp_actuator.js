@@ -5,6 +5,7 @@ function MDPActuator(learner) {
   this.action = undefined;
 
   this.totalGamesPlayed = 0;
+  this.averageDiff = 0;
 }
 
 MDPActuator.prototype.actuate = function (grid, metadata) {
@@ -35,6 +36,9 @@ MDPActuator.prototype.addPath = function(grid, action) {
 
 // Continues the game (both restart and keep playing)
 MDPActuator.prototype.restart = function () {
+  //this.averageDiff = this.learner.totalDiffSum / this.path.length;
+  this.averageDiff = this.learner.totalDiffSum;
+  this.learner.restart();
   this.path = [];
 };
 

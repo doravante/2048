@@ -27,7 +27,7 @@ while(true) {
     }
   }
 
-  console.log(i + ' - ' + game.score + ' - ' + score.get());
+  console.log(i + ' - ' + game.score + ' - ' + score.get() + ' - ' + actuator.averageDiff);
   if (i % 1000 == 0) {
     var contents = file.writeFileSync("./qvalues" + i + ".json", util.inspect(learner.toJSON(), true, depth=7) + " - " + game.score);
   }
