@@ -1,7 +1,10 @@
-function MDPActuator(learner) {
-  this.path = [];
+var fourier = require("./fourier_basis.js");
+var learner = require("./q-lambda.js");
 
-  this.learner = learner;
+function MDPActuator() {
+  this.fourier = new fourier(3, 16);
+
+  this.learner = new learner(0.1, 1.0, 0.9, 0.001, 4, this.fourier.nterms);
   this.action = undefined;
 
   this.totalGamesPlayed = 0;
@@ -9,37 +12,26 @@ function MDPActuator(learner) {
 }
 
 MDPActuator.prototype.actuate = function (grid, metadata) {
+  var state = this.fourier.encodeState(grid.repr());
+
   if (metadata.terminated) {
     this.totalGamesPlayed++;
-    this.updateReward(metadata.score);
-    this.learner.learnBackwards(this.path);
+    this.learner.update(this.action, state, metadata.score, true);
+    return;
   }
 
-  this.action = this.learner.bestAction(grid.repr());
+  if (this.action != undefined) {
+    this.learner.update(this.action, state, 0, false);
+  }
+  else {
+    this.learner.start(state);
+  }
 
-  this.updateLastState(grid);
-  this.addPath(grid, this.action);
+  this.action = this.learner.action();
 };
 
-MDPActuator.prototype.updateReward = function(reward) {
-  this.path[this.path.length-1].reward = reward;
+MDPActuator.prototype.restart = function() {
+  this.action = undefined;
 }
-
-MDPActuator.prototype.updateLastState = function(grid) {
-  if(this.path.length > 0)
-    this.path[this.path.length-1].nextState = grid.repr();
-}
-
-MDPActuator.prototype.addPath = function(grid, action) {
-  this.path.push({'state': grid.repr(), 'action': action, 'reward': 0, 'nextState' : grid.repr()});
-}
-
-// Continues the game (both restart and keep playing)
-MDPActuator.prototype.restart = function () {
-  //this.averageDiff = this.learner.totalDiffSum / this.path.length;
-  this.averageDiff = this.learner.totalDiffSum;
-  this.learner.restart();
-  this.path = [];
-};
 
 module.exports = MDPActuator;
