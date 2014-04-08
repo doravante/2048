@@ -11,9 +11,11 @@ var score = new ScoreManager();
 
 var game = new GameManager(4, input, actuator, score);
 
-var i=0;
+var tot_games = 0;
+var tot_score = 0;
 
 while(true) {
+  game.keepPlaying = true;
   while(true) {
     game.actuate();
     var action = actuator.action;
@@ -24,8 +26,13 @@ while(true) {
     }
   }
 
-  console.log(i + ' - ' + game.score + ' - ' + score.get() + ' - ' + actuator.averageDiff);
-  i++;
+  tot_score += game.score;
+  tot_games++;
+  
+  var average = tot_score / tot_games;
+
+  if (tot_games % 100 == 0)
+    console.log(tot_games + ' - ' + game.score + ' - ' + score.get() + ' - ' + average);
+
   game.restart();
-  actuator.restart();
 }

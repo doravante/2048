@@ -1,37 +1,40 @@
-var fourier = require("./fourier_basis.js");
 var learner = require("./q-lambda.js");
 
 function MDPActuator() {
-  this.fourier = new fourier(3, 16);
+  this.learner = new learner(0.1, 1.0, 0.9, 4);
+  this.setup();
+}
 
-  this.learner = new learner(0.1, 1.0, 0.9, 0.001, 4, this.fourier.nterms);
+MDPActuator.prototype.setup = function () {
+  this.state = undefined;
   this.action = undefined;
-
-  this.totalGamesPlayed = 0;
-  this.averageDiff = 0;
 }
 
 MDPActuator.prototype.actuate = function (grid, metadata) {
-  var state = this.fourier.encodeState(grid.repr());
+  var state = grid.repr();
 
   if (metadata.terminated) {
-    this.totalGamesPlayed++;
-    this.learner.update(this.action, state, metadata.score, true);
+    this.learner.update(this.action, metadata.score, undefined);
+    
+    this.setup();
     return;
   }
 
+  var action = this.learner.nextMove(state);
+  
   if (this.action != undefined) {
-    this.learner.update(this.action, state, 0, false);
+    this.learner.update(this.action, 0, state);
   }
   else {
-    this.learner.start(state);
+    this.learner.start();
   }
 
-  this.action = this.learner.action();
+  this.state = state;
+  this.action = action;
 };
 
 MDPActuator.prototype.restart = function() {
-  this.action = undefined;
 }
+
 
 module.exports = MDPActuator;
