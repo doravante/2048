@@ -31,7 +31,7 @@ while(true) {
   
   var average = tot_score / tot_games;
 
-  if (tot_games % 100 == 0)
+  //if (tot_games % 100 == 0)
     console.log(tot_games + ' - ' + game.score + ' - ' + score.get() + ' - ' + average);
 
   game.restart();
