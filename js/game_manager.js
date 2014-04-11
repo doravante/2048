@@ -1,5 +1,7 @@
-var Grid = require('./grid.js');
-var Tile = require('./tile.js');
+if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
+  var Grid = require('./grid.js');
+  var Tile = require('./tile.js');
+}
 
 function GameManager(size, inputManager, actuator, scoreManager) {
   this.size         = size; // Size of the grid
@@ -240,4 +242,7 @@ GameManager.prototype.positionsEqual = function (first, second) {
   return first.x === second.x && first.y === second.y;
 };
 
-module.exports = GameManager;
+if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
+  module.exports = GameManager;
+}
+

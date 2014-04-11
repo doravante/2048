@@ -16,4 +16,7 @@ Tile.prototype.updatePosition = function (position) {
   this.y = position.y;
 };
 
-module.exports = Tile;
+if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
+  module.exports = Tile;
+}
+

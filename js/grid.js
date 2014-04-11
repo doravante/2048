@@ -98,4 +98,7 @@ Grid.prototype.repr = function() {
   return cells.join('-');
 }
 
-module.exports = Grid;
+if (typeof module !== "undefined" && typeof module.exports !== "undefined") {
+  module.exports = Grid;
+}
+

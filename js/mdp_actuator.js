@@ -4,7 +4,7 @@ var deepqlearn = require("./deepqlearn.js"),
 function MDPActuator() {
   var num_inputs = 16;
   var num_actions = 4;
-  var temporal_window = 20;
+  var temporal_window = 10;
   var network_size = num_inputs*temporal_window + num_actions*temporal_window + num_inputs;
 
   // the value function network computes a value of taking any of the possible actions
@@ -34,26 +34,29 @@ function MDPActuator() {
   opt.tdtrainer_options = tdtrainer_options;
 
   this.brain = new deepqlearn.Brain(num_inputs, num_actions, opt); // woohoo
+  
+  this.restart();
+
+  this.moves = 0;
 }
 
 MDPActuator.prototype.actuate = function (grid, metadata) {
-  var state = this.encodeState(grid.repr());
+  this.moves++;
+  var state = this.convertStateToArray(grid.repr());
 
-  if (metadata.terminated) {
-    this.brain.backward(metadata.score); // <-- learning magic happens here
-    return;
+  // every other action but the first on every game
+  if (this.action != undefined)
+  {
+    var reward = metadata.score - this.score;
+  
+    // penalize same state action
+    if (reward < 0) reward = -10;
+
+	  this.brain.backward(reward); // <-- learning magic happens here
+	  this.score = metadata.score;
   }
 
   this.action = this.brain.forward(state);
-      
-  // same state twice, penalize this action
-  var reward = 0;
-  if (this.state != undefined && this.state == state)
-  {
-    reward = -5;
-  }
-
-  this.brain.backward(reward); // <-- learning magic happens here
 };
 
 MDPActuator.prototype.scaleState = function(state) {
@@ -73,7 +76,14 @@ MDPActuator.prototype.encodeState = function(state) {
   return this.scaleState(state);
 }
 
+MDPActuator.prototype.debug = function() {
+  return this.brain.average_reward_window.get_average() + " - " + this.moves;
+}
+
 MDPActuator.prototype.restart = function() {
+	this.score = 0;
+	this.action = undefined;
+  this.moves = 0;
 }
 
 module.exports = MDPActuator;

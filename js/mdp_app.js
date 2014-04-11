@@ -31,8 +31,12 @@ while(true) {
   
   var average = tot_score / tot_games;
 
-  //if (tot_games % 100 == 0)
-    console.log(tot_games + ' - ' + game.score + ' - ' + score.get() + ' - ' + average);
+  if (tot_games % 10 == 0)
+  {
+    var contents = file.writeFileSync("./net" + tot_games + ".json", JSON.stringify(actuator.brain.value_net.toJSON()));
+  }
+
+  console.log(tot_games + ' - ' + actuator.debug());
 
   game.restart();
 }
